@@ -1,0 +1,104 @@
+// Prisma Schema for Personal Blog
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 文章模型
+model Post {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String    @db.Text
+  contentType String    @default("markdown") // 'markdown' | 'html'
+  excerpt     String?   @db.Text
+  coverImage  String?
+  published   Boolean   @default(false)
+  featured    Boolean   @default(false)
+  viewCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  tags       Tag[]
+  comments   Comment[]
+
+  @@index([published, publishedAt])
+  @@index([slug])
+}
+
+// 分類模型
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  posts       Post[]
+
+  @@index([slug])
+}
+
+// 標籤模型
+model Tag {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  posts Post[]
+
+  @@index([slug])
+}
+
+// 評論模型 (自建，支援巢狀回覆)
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  author    String
+  email     String?
+  website   String?
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+
+  // 巢狀回覆
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId String?
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([postId, approved])
+  @@index([parentId])
+}
+
+// 訪客分析模型
+model Analytics {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String?
+  userAgent String?
+  country   String?
+  createdAt DateTime @default(now())
+
+  @@index([path])
+  @@index([createdAt])
+}
+
+// 管理員用戶模型
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
