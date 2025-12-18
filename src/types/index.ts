@@ -3,7 +3,7 @@ export interface Post {
   title: string
   slug: string
   content: string
-  contentType: 'markdown' | 'html'
+  contentType: string
   excerpt: string | null
   coverImage: string | null
   published: boolean
