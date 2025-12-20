@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, Eye, ArrowLeft } from 'lucide-react'
+import { Save, Eye, ArrowLeft, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { slugify } from '@/lib/utils'
 import { markdownToHtml } from '@/lib/markdown'
+import AIRewriteModal from './AIRewriteModal'
 
 interface Category {
   id: string
@@ -75,6 +76,7 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
   const [showPreview, setShowPreview] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [error, setError] = useState('')
+  const [showAIModal, setShowAIModal] = useState(false)
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -135,6 +137,10 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
         ? prev.tagIds.filter((id) => id !== tagId)
         : [...prev.tagIds, tagId],
     }))
+  }
+
+  const handleAIRewriteApply = (rewrittenContent: string) => {
+    setFormData((prev) => ({ ...prev, content: rewrittenContent }))
   }
 
   return (
@@ -223,9 +229,19 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                內容 <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  內容 <span className="text-red-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowAIModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  AI 改寫
+                </button>
+              </div>
               {showPreview ? (
                 <div
                   className="w-full min-h-[400px] p-4 border border-gray-300 rounded-lg bg-gray-50 prose max-w-none"
@@ -409,6 +425,16 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
           </div>
         </div>
       </div>
+
+      {/* AI Rewrite Modal */}
+      <AIRewriteModal
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        onApply={handleAIRewriteApply}
+        currentContent={formData.content}
+        currentTitle={formData.title}
+        contentType={formData.contentType as 'markdown' | 'html'}
+      />
     </form>
   )
 }
