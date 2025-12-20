@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
@@ -14,6 +15,7 @@ interface CategoryPageProps {
 }
 
 async function getCategory(slug: string) {
+  noStore()
   try {
     const category = await prisma.category.findUnique({
       where: { slug },
@@ -36,7 +38,8 @@ async function getCategory(slug: string) {
       },
     })
     return category
-  } catch {
+  } catch (error) {
+    console.error('Error fetching category:', error)
     return null
   }
 }

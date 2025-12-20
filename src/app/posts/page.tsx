@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import PostList from '@/components/post/PostList'
 import prisma from '@/lib/prisma'
 
@@ -18,6 +19,7 @@ interface PostsPageProps {
 }
 
 async function getPosts(page: number = 1, pageSize: number = 12) {
+  noStore()
   try {
     const skip = (page - 1) * pageSize
 
@@ -48,7 +50,8 @@ async function getPosts(page: number = 1, pageSize: number = 12) {
       total,
       totalPages: Math.ceil(total / pageSize),
     }
-  } catch {
+  } catch (error) {
+    console.error('Error fetching posts:', error)
     return {
       posts: [],
       total: 0,

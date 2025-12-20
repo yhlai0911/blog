@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { unstable_noStore as noStore } from 'next/cache'
 import { ArrowRight } from 'lucide-react'
 import PostList from '@/components/post/PostList'
 import prisma from '@/lib/prisma'
@@ -6,6 +7,7 @@ import prisma from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 async function getFeaturedPosts() {
+  noStore()
   try {
     const posts = await prisma.post.findMany({
       where: {
@@ -22,12 +24,14 @@ async function getFeaturedPosts() {
       take: 3,
     })
     return posts
-  } catch {
+  } catch (error) {
+    console.error('Error fetching featured posts:', error)
     return []
   }
 }
 
 async function getRecentPosts() {
+  noStore()
   try {
     const posts = await prisma.post.findMany({
       where: {
@@ -43,12 +47,14 @@ async function getRecentPosts() {
       take: 6,
     })
     return posts
-  } catch {
+  } catch (error) {
+    console.error('Error fetching recent posts:', error)
     return []
   }
 }
 
 async function getCategories() {
+  noStore()
   try {
     const categories = await prisma.category.findMany({
       include: {
@@ -61,7 +67,8 @@ async function getCategories() {
       },
     })
     return categories
-  } catch {
+  } catch (error) {
+    console.error('Error fetching categories:', error)
     return []
   }
 }

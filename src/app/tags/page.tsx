@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import Link from 'next/link'
 import { Tag } from 'lucide-react'
 import prisma from '@/lib/prisma'
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 }
 
 async function getTags() {
+  noStore()
   try {
     const tags = await prisma.tag.findMany({
       include: {
@@ -23,7 +25,8 @@ async function getTags() {
       },
     })
     return tags.filter((tag) => tag._count.posts > 0)
-  } catch {
+  } catch (error) {
+    console.error('Error fetching tags:', error)
     return []
   }
 }

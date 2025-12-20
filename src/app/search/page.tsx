@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import { Search } from 'lucide-react'
 import SearchForm from '@/components/search/SearchForm'
 import PostList from '@/components/post/PostList'
@@ -18,6 +19,7 @@ interface SearchPageProps {
 }
 
 async function searchPosts(query: string) {
+  noStore()
   if (!query || query.trim().length < 2) {
     return []
   }
@@ -57,7 +59,8 @@ async function searchPosts(query: string) {
       take: 20,
     })
     return posts
-  } catch {
+  } catch (error) {
+    console.error('Error searching posts:', error)
     return []
   }
 }

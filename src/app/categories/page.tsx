@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import Link from 'next/link'
 import { Folder } from 'lucide-react'
 import prisma from '@/lib/prisma'
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 }
 
 async function getCategories() {
+  noStore()
   try {
     const categories = await prisma.category.findMany({
       include: {
@@ -23,7 +25,8 @@ async function getCategories() {
       },
     })
     return categories
-  } catch {
+  } catch (error) {
+    console.error('Error fetching categories:', error)
     return []
   }
 }

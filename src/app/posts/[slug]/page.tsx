@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, Clock, Tag as TagIcon, ChevronLeft, Eye } from 'lucide-react'
+import { unstable_noStore as noStore } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { formatDate, getReadingTime } from '@/lib/utils'
 import { markdownToHtml, sanitizeHtmlContent, extractHeadings } from '@/lib/markdown'
@@ -27,6 +28,7 @@ interface PostPageProps {
 }
 
 async function getPost(slug: string, previewToken?: string) {
+  noStore()
   try {
     const post = await prisma.post.findUnique({
       where: { slug },
@@ -70,7 +72,8 @@ async function getPost(slug: string, previewToken?: string) {
     // to prevent duplicate counting from prefetches and bots
 
     return { post, isPreview: !post.published }
-  } catch {
+  } catch (error) {
+    console.error('Error fetching post:', error)
     return null
   }
 }

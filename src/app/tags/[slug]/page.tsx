@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Tag as TagIcon } from 'lucide-react'
@@ -14,6 +15,7 @@ interface TagPageProps {
 }
 
 async function getTag(slug: string) {
+  noStore()
   try {
     const tag = await prisma.tag.findUnique({
       where: { slug },
@@ -36,7 +38,8 @@ async function getTag(slug: string) {
       },
     })
     return tag
-  } catch {
+  } catch (error) {
+    console.error('Error fetching tag:', error)
     return null
   }
 }
