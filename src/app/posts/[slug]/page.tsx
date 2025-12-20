@@ -12,6 +12,8 @@ import CommentSection from '@/components/comment/CommentSection'
 import ViewTracker from '@/components/post/ViewTracker'
 import TableOfContents from '@/components/post/TableOfContents'
 import { ArticleJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
+import ShareButtons from '@/components/post/ShareButtons'
+import RelatedPosts from '@/components/post/RelatedPosts'
 
 interface PostPageProps {
   params: Promise<{
@@ -242,13 +244,29 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           </header>
 
           {/* Content */}
-          <div className="bg-white rounded-xl shadow-sm p-8 mb-12">
+          <div className="bg-white rounded-xl shadow-sm p-8 mb-8">
             {post.contentType === 'markdown' ? (
               <MarkdownContent content={htmlContent} />
             ) : (
               <HtmlContent content={htmlContent} />
             )}
           </div>
+
+          {/* Share Buttons */}
+          {!isPreview && (
+            <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+              <ShareButtons url={postUrl} title={post.title} />
+            </div>
+          )}
+
+          {/* Related Posts */}
+          {!isPreview && (
+            <RelatedPosts
+              currentPostId={post.id}
+              categoryId={post.categoryId}
+              tagIds={post.tags.map((t) => t.id)}
+            />
+          )}
 
           {/* Comments */}
           <CommentSection postId={post.id} comments={post.comments} />
