@@ -1,17 +1,19 @@
 import prisma from '@/lib/prisma'
+import { extractExcerpt } from '@/lib/markdown'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || '我的部落格'
-const SITE_DESCRIPTION = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || '分享技術與生活'
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'My Blog'
+const SITE_DESCRIPTION = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || '分享技術心得、生活點滴與學習筆記的個人部落格'
 
 export async function GET() {
   const posts = await prisma.post.findMany({
     where: { published: true },
     orderBy: { publishedAt: 'desc' },
-    take: 20,
+    take: 50,
     select: {
       title: true,
       slug: true,
+      content: true,
       excerpt: true,
       publishedAt: true,
       category: { select: { name: true } },
@@ -31,14 +33,16 @@ export async function GET() {
       const pubDate = post.publishedAt
         ? new Date(post.publishedAt).toUTCString()
         : new Date().toUTCString()
+      const postUrl = `${SITE_URL}/posts/${encodeURIComponent(post.slug)}`
+      const description = post.excerpt || extractExcerpt(post.content, 300)
 
       return `
     <item>
       <title>${escapeXml(post.title)}</title>
-      <link>${SITE_URL}/posts/${post.slug}</link>
-      <guid isPermaLink="true">${SITE_URL}/posts/${post.slug}</guid>
+      <link>${postUrl}</link>
+      <guid isPermaLink="true">${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description>${escapeXml(post.excerpt || '')}</description>
+      <description>${escapeXml(description)}</description>
       ${post.category ? `<category>${escapeXml(post.category.name)}</category>` : ''}
     </item>`
     })

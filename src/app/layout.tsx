@@ -29,6 +29,11 @@ export const metadata: Metadata = {
     locale: 'zh_TW',
     siteName: 'My Blog',
   },
+  alternates: {
+    types: {
+      'application/rss+xml': '/feed.xml',
+    },
+  },
 }
 
 export default function RootLayout({
