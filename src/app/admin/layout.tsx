@@ -15,6 +15,11 @@ export default async function AdminLayout({
     redirect('/login')
   }
 
+  // Check for admin role
+  if (session.user?.role !== 'admin') {
+    redirect('/')
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <AdminHeader user={session.user} />

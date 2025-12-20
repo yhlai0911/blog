@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { createCommentSchema, validateRequest } from '@/lib/validations'
 
 // Spam keywords blacklist
 const SPAM_KEYWORDS = [
@@ -19,15 +20,14 @@ function isSpam(content: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { postId, parentId, author, email, website, content } = body
 
-    // Validation
-    if (!postId || !author || !content) {
-      return NextResponse.json(
-        { error: '請填寫必要欄位' },
-        { status: 400 }
-      )
+    // Validate request body
+    const validation = validateRequest(createCommentSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
+
+    const { postId, parentId, author, email, website, content } = validation.data
 
     // Check if post exists
     const post = await prisma.post.findUnique({
@@ -35,18 +35,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (!post) {
-      return NextResponse.json(
-        { error: '文章不存在' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: '文章不存在' }, { status: 404 })
     }
 
     // Check for spam
     if (isSpam(content) || isSpam(author)) {
-      return NextResponse.json(
-        { error: '評論包含不當內容' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '評論包含不當內容' }, { status: 400 })
     }
 
     // Check if parent comment exists (if replying)
@@ -56,10 +50,7 @@ export async function POST(request: NextRequest) {
       })
 
       if (!parentComment) {
-        return NextResponse.json(
-          { error: '回覆的評論不存在' },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: '回覆的評論不存在' }, { status: 404 })
       }
     }
 
@@ -87,10 +78,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Comment creation error:', error)
-    return NextResponse.json(
-      { error: '提交失敗，請稍後再試' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '提交失敗，請稍後再試' }, { status: 500 })
   }
 }
 
@@ -100,10 +88,7 @@ export async function GET(request: NextRequest) {
     const postId = searchParams.get('postId')
 
     if (!postId) {
-      return NextResponse.json(
-        { error: '請提供文章 ID' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '請提供文章 ID' }, { status: 400 })
     }
 
     const comments = await prisma.comment.findMany({
@@ -130,9 +115,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ comments })
   } catch (error) {
     console.error('Comment fetch error:', error)
-    return NextResponse.json(
-      { error: '獲取評論失敗' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '獲取評論失敗' }, { status: 500 })
   }
 }

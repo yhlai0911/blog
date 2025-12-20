@@ -1,37 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth-utils'
 import prisma from '@/lib/prisma'
 import { slugify } from '@/lib/utils'
+import { createPostSchema, validateRequest } from '@/lib/validations'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: '未授權' }, { status: 401 })
+    const auth = await requireAdmin()
+    if (!auth.authorized) {
+      return auth.response
     }
 
     const body = await request.json()
-    const {
-      title,
-      slug,
-      content,
-      contentType,
-      excerpt,
-      coverImage,
-      categoryId,
-      tagIds,
-      published,
-      featured,
-    } = body
 
-    if (!title || !content) {
-      return NextResponse.json(
-        { error: '標題和內容為必填' },
-        { status: 400 }
-      )
+    // Validate request body
+    const validation = validateRequest(createPostSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
+
+    const { title, slug, content, contentType, excerpt, coverImage, categoryId, tagIds, published, featured } =
+      validation.data
 
     const finalSlug = slug || slugify(title)
 
@@ -41,10 +30,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingPost) {
-      return NextResponse.json(
-        { error: '此 slug 已存在' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '此 slug 已存在' }, { status: 400 })
     }
 
     const post = await prisma.post.create({
@@ -74,19 +60,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, post })
   } catch (error) {
     console.error('Post creation error:', error)
-    return NextResponse.json(
-      { error: '建立文章失敗' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '建立文章失敗' }, { status: 500 })
   }
 }
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: '未授權' }, { status: 401 })
+    const auth = await requireAdmin()
+    if (!auth.authorized) {
+      return auth.response
     }
 
     const posts = await prisma.post.findMany({
@@ -105,9 +87,6 @@ export async function GET() {
     return NextResponse.json({ posts })
   } catch (error) {
     console.error('Posts fetch error:', error)
-    return NextResponse.json(
-      { error: '獲取文章失敗' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '獲取文章失敗' }, { status: 500 })
   }
 }

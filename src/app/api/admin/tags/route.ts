@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth-utils'
 import prisma from '@/lib/prisma'
 import { slugify } from '@/lib/utils'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: '未授權' }, { status: 401 })
+    const auth = await requireAdmin()
+    if (!auth.authorized) {
+      return auth.response
     }
 
     const tags = await prisma.tag.findMany({
@@ -25,9 +24,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: '未授權' }, { status: 401 })
+    const auth = await requireAdmin()
+    if (!auth.authorized) {
+      return auth.response
     }
 
     const { name, slug } = await request.json()

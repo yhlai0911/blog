@@ -5,10 +5,11 @@ import Image from 'next/image'
 import { Calendar, Clock, Tag as TagIcon, ChevronLeft, Eye } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { formatDate, getReadingTime } from '@/lib/utils'
-import { markdownToHtml } from '@/lib/markdown'
+import { markdownToHtml, sanitizeHtmlContent } from '@/lib/markdown'
 import MarkdownContent from '@/components/post/MarkdownContent'
 import HtmlContent from '@/components/post/HtmlContent'
 import CommentSection from '@/components/comment/CommentSection'
+import ViewTracker from '@/components/post/ViewTracker'
 
 interface PostPageProps {
   params: Promise<{
@@ -49,11 +50,8 @@ async function getPost(slug: string) {
       return null
     }
 
-    // Increment view count
-    await prisma.post.update({
-      where: { id: post.id },
-      data: { viewCount: { increment: 1 } },
-    })
+    // View count is now tracked via client-side ViewTracker component
+    // to prevent duplicate counting from prefetches and bots
 
     return post
   } catch {
@@ -94,13 +92,16 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const readingTime = getReadingTime(post.content)
 
-  // Convert markdown to HTML if needed
+  // Convert markdown to HTML if needed, and sanitize
   const htmlContent = post.contentType === 'markdown'
     ? await markdownToHtml(post.content)
-    : post.content
+    : sanitizeHtmlContent(post.content)
 
   return (
     <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Track page view */}
+      <ViewTracker slug={slug} />
+
       {/* Back Link */}
       <Link
         href="/posts"

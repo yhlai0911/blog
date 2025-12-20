@@ -102,3 +102,18 @@ model User {
 
   @@index([email])
 }
+
+// 網站設定模型
+model Settings {
+  id              String   @id @default("site_settings")
+  siteName        String   @default("我的部落格")
+  siteDescription String   @default("分享技術與生活")
+  siteUrl         String   @default("http://localhost:3000")
+  socialTwitter   String?
+  socialGithub    String?
+  socialLinkedin  String?
+  seoDefaultTitle String?
+  seoDefaultDesc  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

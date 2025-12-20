@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth-utils'
 import prisma from '@/lib/prisma'
 
 interface RouteParams {
@@ -11,10 +10,9 @@ interface RouteParams {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: '未授權' }, { status: 401 })
+    const auth = await requireAdmin()
+    if (!auth.authorized) {
+      return auth.response
     }
 
     const { id } = await params
