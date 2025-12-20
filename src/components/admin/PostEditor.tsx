@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, Eye, ArrowLeft, Sparkles } from 'lucide-react'
+import { Save, Eye, ArrowLeft, Sparkles, Image, Wand2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { slugify } from '@/lib/utils'
 import { markdownToHtml } from '@/lib/markdown'
@@ -77,6 +77,9 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
   const [previewHtml, setPreviewHtml] = useState('')
   const [error, setError] = useState('')
   const [showAIModal, setShowAIModal] = useState(false)
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+  const [isGeneratingMetadata, setIsGeneratingMetadata] = useState(false)
+  const [imageStyle, setImageStyle] = useState<'realistic' | 'illustration' | 'abstract' | 'minimal'>('minimal')
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -141,6 +144,80 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
 
   const handleAIRewriteApply = (rewrittenContent: string) => {
     setFormData((prev) => ({ ...prev, content: rewrittenContent }))
+  }
+
+  const handleGenerateImage = async () => {
+    if (!formData.title.trim()) {
+      setError('請先輸入文章標題')
+      return
+    }
+    setIsGeneratingImage(true)
+    setError('')
+    try {
+      const response = await fetch('/api/admin/ai/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          content: formData.content,
+          style: imageStyle,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || '圖片生成失敗')
+      }
+      setFormData((prev) => ({ ...prev, coverImage: data.imageUrl }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '圖片生成失敗')
+    } finally {
+      setIsGeneratingImage(false)
+    }
+  }
+
+  const handleGenerateMetadata = async () => {
+    if (!formData.title.trim() || !formData.content.trim()) {
+      setError('請先輸入文章標題和內容')
+      return
+    }
+    setIsGeneratingMetadata(true)
+    setError('')
+    try {
+      const response = await fetch('/api/admin/ai/generate-metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          content: formData.content,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || '生成失敗')
+      }
+      const { metadata } = data
+      setFormData((prev) => ({
+        ...prev,
+        excerpt: metadata.excerpt || prev.excerpt,
+        categoryId: metadata.categoryId || prev.categoryId,
+        tagIds: metadata.tagIds?.length > 0 ? metadata.tagIds : prev.tagIds,
+      }))
+      // Show suggestions if any
+      if (metadata.suggestedCategory || metadata.suggestedTags?.length > 0) {
+        const suggestions: string[] = []
+        if (metadata.suggestedCategory) {
+          suggestions.push(`建議新增分類：${metadata.suggestedCategory}`)
+        }
+        if (metadata.suggestedTags?.length > 0) {
+          suggestions.push(`建議新增標籤：${metadata.suggestedTags.join('、')}`)
+        }
+        alert(suggestions.join('\n'))
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '生成失敗')
+    } finally {
+      setIsGeneratingMetadata(false)
+    }
   }
 
   return (
@@ -270,9 +347,29 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                摘要
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  摘要
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateMetadata}
+                  disabled={isGeneratingMetadata || !formData.title || !formData.content}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingMetadata ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      AI 生成摘要/分類/標籤
+                    </>
+                  )}
+                </button>
+              </div>
               <textarea
                 value={formData.excerpt}
                 onChange={(e) =>
@@ -362,7 +459,37 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
 
           {/* Cover Image */}
           <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900">封面圖片</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-gray-900">封面圖片</h3>
+              <button
+                type="button"
+                onClick={handleGenerateImage}
+                disabled={isGeneratingImage || !formData.title}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingImage ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <Image className="w-4 h-4" />
+                    AI 生成
+                  </>
+                )}
+              </button>
+            </div>
+            <select
+              value={imageStyle}
+              onChange={(e) => setImageStyle(e.target.value as typeof imageStyle)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="minimal">極簡風格</option>
+              <option value="realistic">寫實風格</option>
+              <option value="illustration">插畫風格</option>
+              <option value="abstract">抽象風格</option>
+            </select>
             <input
               type="url"
               value={formData.coverImage}

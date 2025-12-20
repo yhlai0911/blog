@@ -74,14 +74,29 @@ export async function POST(request: Request) {
       optimizationInstructions.push('全面優化文章：改善流暢度、優化結構、讓內容更專業易讀')
     }
 
+    const formatInstructions = contentType === 'html'
+      ? `輸出格式必須是純 HTML 格式：
+   - 使用 <h2>、<h3> 作為標題
+   - 使用 <p> 包裹段落
+   - 使用 <ul>/<ol> 和 <li> 作為列表
+   - 使用 <strong>、<em> 作為強調
+   - 使用 <pre><code> 包裹程式碼
+   - 禁止使用任何 Markdown 語法（如 ##、**、- 等）`
+      : `輸出格式必須是純 Markdown 格式：
+   - 使用 ## 和 ### 作為標題
+   - 使用 - 或 * 作為列表
+   - 使用 **粗體** 和 *斜體* 作為強調
+   - 使用 \`\`\` 包裹程式碼區塊`
+
     const systemPrompt = `你是一位專業的部落格文章編輯和內容優化專家。你的任務是根據使用者的要求改寫和優化文章內容。
 
 規則：
 1. 保持原文的核心意思和主題不變
-2. 輸出格式必須與輸入格式一致（${contentType === 'markdown' ? 'Markdown' : 'HTML'}）
+2. ${formatInstructions}
 3. 保留原有的程式碼區塊、連結、圖片等元素
 4. 使用繁體中文
-5. 直接輸出改寫後的內容，不要加入任何解釋或前言`
+5. 直接輸出改寫後的內容，不要加入任何解釋或前言
+6. 不要在開頭加入 \`\`\`html 或 \`\`\`markdown 標記`
 
     const userPrompt = `請根據以下要求改寫這篇文章：
 
