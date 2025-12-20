@@ -11,6 +11,7 @@ import HtmlContent from '@/components/post/HtmlContent'
 import CommentSection from '@/components/comment/CommentSection'
 import ViewTracker from '@/components/post/ViewTracker'
 import TableOfContents from '@/components/post/TableOfContents'
+import { ArticleJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
 
 interface PostPageProps {
   params: Promise<{
@@ -122,8 +123,33 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
 
   const showToc = headings.length >= 3 // Only show TOC if there are at least 3 headings
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'
+  const postUrl = `${baseUrl}/posts/${encodeURIComponent(post.slug)}`
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* JSON-LD Structured Data */}
+      {!isPreview && (
+        <>
+          <ArticleJsonLd
+            title={post.title}
+            description={post.excerpt || undefined}
+            url={postUrl}
+            image={post.coverImage || undefined}
+            datePublished={post.publishedAt?.toISOString()}
+            dateModified={post.updatedAt.toISOString()}
+            publisherName="My Blog"
+          />
+          <BreadcrumbJsonLd
+            items={[
+              { name: '首頁', url: baseUrl },
+              { name: '文章', url: `${baseUrl}/posts` },
+              { name: post.title, url: postUrl },
+            ]}
+          />
+        </>
+      )}
+
       {/* Track page view - only for published posts */}
       {!isPreview && <ViewTracker slug={decodedSlug} />}
 
