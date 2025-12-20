@@ -94,10 +94,10 @@ export default async function HomePage() {
 
       {/* Featured Posts */}
       {featuredPosts.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-gray-800">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">精選文章</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">精選文章</h2>
               <Link
                 href="/posts?featured=true"
                 className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -111,10 +111,10 @@ export default async function HomePage() {
       )}
 
       {/* Recent Posts */}
-      <section className="py-16">
+      <section className="py-16 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">最新文章</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">最新文章</h2>
             <Link
               href="/posts"
               className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -128,20 +128,20 @@ export default async function HomePage() {
 
       {/* Categories */}
       {categories.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-gray-800">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">文章分類</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">文章分類</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {categories.map((category) => (
                 <Link
                   key={category.id}
                   href={`/categories/${category.slug}`}
-                  className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                  className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group"
                 >
-                  <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                  <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {category.name}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {category._count.posts} 篇文章
                   </p>
                 </Link>
