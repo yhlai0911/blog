@@ -62,18 +62,58 @@ export async function POST(request: Request) {
       quality: 'standard',
     })
 
-    const imageUrl = response.data?.[0]?.url
+    const tempImageUrl = response.data?.[0]?.url
 
-    if (!imageUrl) {
+    if (!tempImageUrl) {
       return NextResponse.json(
         { error: 'AI 未能生成圖片' },
         { status: 500 }
       )
     }
 
+    // 如果有設定 IMGBB_API_KEY，將圖片上傳到 imgbb 持久化儲存
+    if (process.env.IMGBB_API_KEY) {
+      try {
+        // 下載圖片
+        const imageResponse = await fetch(tempImageUrl)
+        if (!imageResponse.ok) {
+          throw new Error('無法下載圖片')
+        }
+
+        const imageBuffer = await imageResponse.arrayBuffer()
+        const base64Image = Buffer.from(imageBuffer).toString('base64')
+
+        // 上傳到 imgbb
+        const formData = new FormData()
+        formData.append('key', process.env.IMGBB_API_KEY)
+        formData.append('image', base64Image)
+
+        const uploadResponse = await fetch('https://api.imgbb.com/1/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        const uploadData = await uploadResponse.json()
+
+        if (uploadResponse.ok && uploadData.success) {
+          return NextResponse.json({
+            success: true,
+            imageUrl: uploadData.data.url,
+            persistent: true,
+          })
+        }
+      } catch (uploadError) {
+        console.error('Image upload to imgbb failed:', uploadError)
+        // 上傳失敗時回退到臨時 URL
+      }
+    }
+
+    // 沒有設定 IMGBB 或上傳失敗，返回臨時 URL（會在約 1 小時後過期）
     return NextResponse.json({
       success: true,
-      imageUrl,
+      imageUrl: tempImageUrl,
+      persistent: false,
+      warning: '圖片為臨時 URL，將在約 1 小時後過期。請設定 IMGBB_API_KEY 環境變數以持久化儲存圖片。',
     })
   } catch (error) {
     console.error('AI Image Generation Error:', error)

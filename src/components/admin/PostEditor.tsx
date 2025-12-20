@@ -80,6 +80,7 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
   const [isGeneratingMetadata, setIsGeneratingMetadata] = useState(false)
   const [imageStyle, setImageStyle] = useState<'realistic' | 'illustration' | 'abstract' | 'minimal'>('minimal')
+  const [imageWarning, setImageWarning] = useState('')
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -153,6 +154,7 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
     }
     setIsGeneratingImage(true)
     setError('')
+    setImageWarning('')
     try {
       const response = await fetch('/api/admin/ai/generate-image', {
         method: 'POST',
@@ -168,6 +170,10 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
         throw new Error(data.error || '圖片生成失敗')
       }
       setFormData((prev) => ({ ...prev, coverImage: data.imageUrl }))
+      // 如果圖片未持久化，顯示警告
+      if (data.warning || data.persistent === false) {
+        setImageWarning(data.warning || '圖片為臨時 URL，建議設定 IMGBB_API_KEY 以持久化儲存')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '圖片生成失敗')
     } finally {
@@ -499,6 +505,11 @@ export default function PostEditor({ post, categories, tags }: PostEditorProps) 
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               placeholder="https://example.com/image.jpg"
             />
+            {imageWarning && (
+              <div className="p-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg border border-yellow-200">
+                ⚠️ {imageWarning}
+              </div>
+            )}
             {formData.coverImage && (
               <img
                 src={formData.coverImage}
