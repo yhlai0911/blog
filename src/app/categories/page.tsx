@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { Folder } from 'lucide-react'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: '文章分類',
   description: '按分類瀏覽部落格文章',

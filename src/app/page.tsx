@@ -3,6 +3,8 @@ import { ArrowRight } from 'lucide-react'
 import PostList from '@/components/post/PostList'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 async function getFeaturedPosts() {
   try {
     const posts = await prisma.post.findMany({

@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { Tag } from 'lucide-react'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: '標籤雲',
   description: '按標籤瀏覽部落格文章',

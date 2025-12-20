@@ -5,6 +5,8 @@ import { ChevronLeft, Tag as TagIcon } from 'lucide-react'
 import PostList from '@/components/post/PostList'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 interface TagPageProps {
   params: Promise<{
     slug: string

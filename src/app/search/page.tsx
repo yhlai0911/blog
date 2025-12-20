@@ -4,6 +4,8 @@ import SearchForm from '@/components/search/SearchForm'
 import PostList from '@/components/post/PostList'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: '搜尋文章',
   description: '搜尋部落格文章',

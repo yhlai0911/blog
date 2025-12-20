@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import PostList from '@/components/post/PostList'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: '所有文章',
   description: '瀏覽所有部落格文章',

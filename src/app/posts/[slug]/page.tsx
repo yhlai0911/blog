@@ -15,6 +15,8 @@ import { ArticleJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
 import ShareButtons from '@/components/post/ShareButtons'
 import RelatedPosts from '@/components/post/RelatedPosts'
 
+export const dynamic = 'force-dynamic'
+
 interface PostPageProps {
   params: Promise<{
     slug: string
