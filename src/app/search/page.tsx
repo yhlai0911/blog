@@ -68,7 +68,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Search className="w-8 h-8" />
           搜尋文章
         </h1>
@@ -80,8 +80,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {query && (
         <div className="mb-6">
-          <p className="text-gray-600">
-            搜尋「<span className="font-medium text-gray-900">{query}</span>」
+          <p className="text-gray-600 dark:text-gray-400">
+            搜尋「<span className="font-medium text-gray-900 dark:text-white">{query}</span>」
             的結果：{results.length} 篇文章
           </p>
         </div>
@@ -91,7 +91,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <PostList posts={results} emptyMessage="沒有找到相關文章" />
       ) : (
         <div className="text-center py-12">
-          <p className="text-gray-500">輸入關鍵字開始搜尋</p>
+          <p className="text-gray-500 dark:text-gray-400">輸入關鍵字開始搜尋</p>
         </div>
       )}
     </div>
