@@ -11,19 +11,21 @@ datasource db {
 
 // 文章模型
 model Post {
-  id          String    @id @default(cuid())
-  title       String
-  slug        String    @unique
-  content     String    @db.Text
-  contentType String    @default("markdown") // 'markdown' | 'html'
-  excerpt     String?   @db.Text
-  coverImage  String?
-  published   Boolean   @default(false)
-  featured    Boolean   @default(false)
-  viewCount   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  publishedAt DateTime?
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  content      String    @db.Text
+  contentType  String    @default("markdown") // 'markdown' | 'html'
+  excerpt      String?   @db.Text
+  coverImage   String?
+  published    Boolean   @default(false)
+  featured     Boolean   @default(false)
+  viewCount    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  publishedAt  DateTime?
+  scheduledAt  DateTime? // 排程發佈時間
+  previewToken String?   // 未發佈文章預覽 token
 
   category   Category? @relation(fields: [categoryId], references: [id])
   categoryId String?
@@ -31,6 +33,7 @@ model Post {
   comments   Comment[]
 
   @@index([published, publishedAt])
+  @@index([scheduledAt])
   @@index([slug])
 }
 

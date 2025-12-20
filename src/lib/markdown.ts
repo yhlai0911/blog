@@ -23,6 +23,12 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
     'div': ['class'],
     'th': ['align'],
     'td': ['align'],
+    'h1': ['id'],
+    'h2': ['id'],
+    'h3': ['id'],
+    'h4': ['id'],
+    'h5': ['id'],
+    'h6': ['id'],
   },
   allowedSchemes: ['http', 'https', 'mailto'],
   allowedSchemesByTag: {
@@ -46,18 +52,41 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
   },
 }
 
+// Generate slug for heading ID
+function generateHeadingId(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\u4e00-\u9fff\s-]/g, '')
+    .replace(/\s+/g, '-')
+}
+
+// Add IDs to headings in HTML
+function addHeadingIds(htmlContent: string): string {
+  return htmlContent.replace(
+    /<(h[1-6])>(.+?)<\/\1>/gi,
+    (match, tag, text) => {
+      const id = generateHeadingId(text.replace(/<[^>]+>/g, ''))
+      return `<${tag} id="${id}">${text}</${tag}>`
+    }
+  )
+}
+
 export async function markdownToHtml(markdown: string): Promise<string> {
   const result = await remark()
     .use(html, { sanitize: false })
     .process(markdown)
 
+  // Add IDs to headings
+  const htmlWithIds = addHeadingIds(result.toString())
+
   // Sanitize the HTML output
-  return sanitizeHtml(result.toString(), sanitizeOptions)
+  return sanitizeHtml(htmlWithIds, sanitizeOptions)
 }
 
-// Sanitize raw HTML content
+// Sanitize raw HTML content and add IDs to headings
 export function sanitizeHtmlContent(htmlContent: string): string {
-  return sanitizeHtml(htmlContent, sanitizeOptions)
+  const htmlWithIds = addHeadingIds(htmlContent)
+  return sanitizeHtml(htmlWithIds, sanitizeOptions)
 }
 
 // Extract headings for Table of Contents

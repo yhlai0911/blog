@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { requireAdmin } from '@/lib/auth-utils'
 import prisma from '@/lib/prisma'
+
+function generatePreviewToken(): string {
+  return randomBytes(32).toString('hex')
+}
 
 interface RouteParams {
   params: Promise<{
@@ -59,6 +64,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       tagIds,
       published,
       featured,
+      scheduledAt,
     } = body
 
     const existingPost = await prisma.post.findUnique({
@@ -94,6 +100,18 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       publishedAt = null
     }
 
+    // Parse scheduledAt
+    const parsedScheduledAt = scheduledAt ? new Date(scheduledAt) : null
+
+    // Handle preview token: generate if unpublished and doesn't have one
+    let previewToken = existingPost.previewToken
+    if (!published && !previewToken) {
+      previewToken = generatePreviewToken()
+    } else if (published) {
+      // Clear preview token when published
+      previewToken = null
+    }
+
     const post = await prisma.post.update({
       where: { id },
       data: {
@@ -107,6 +125,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         published,
         featured,
         publishedAt,
+        scheduledAt: parsedScheduledAt,
+        previewToken,
         tags: {
           set: tagIds?.map((tagId: string) => ({ id: tagId })) || [],
         },

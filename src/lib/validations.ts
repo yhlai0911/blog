@@ -7,11 +7,12 @@ export const createPostSchema = z.object({
   content: z.string().min(1, '內容為必填'),
   contentType: z.enum(['markdown', 'html']).default('markdown'),
   excerpt: z.string().max(500, '摘要不可超過 500 字').optional().nullable(),
-  coverImage: z.string().url('封面圖片須為有效網址').optional().nullable(),
+  coverImage: z.string().url('封面圖片須為有效網址').optional().nullable().or(z.literal('')),
   categoryId: z.string().optional().nullable(),
   tagIds: z.array(z.string()).optional(),
   published: z.boolean().default(false),
   featured: z.boolean().default(false),
+  scheduledAt: z.string().optional().nullable(),
 })
 
 export const updatePostSchema = createPostSchema.partial().extend({

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
+import { Plus, Edit, Eye, EyeOff, Clock, ExternalLink } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { formatDate } from '@/lib/utils'
 import DeletePostButton from '@/components/admin/DeletePostButton'
@@ -84,25 +84,27 @@ export default async function AdminPostsPage() {
                     {post.category?.name || '未分類'}
                   </td>
                   <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-                        post.published
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}
-                    >
-                      {post.published ? (
-                        <>
-                          <Eye className="w-3 h-3" />
-                          已發布
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff className="w-3 h-3" />
-                          草稿
-                        </>
-                      )}
-                    </span>
+                    {post.published ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                        <Eye className="w-3 h-3" />
+                        已發布
+                      </span>
+                    ) : post.scheduledAt ? (
+                      <div>
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                          <Clock className="w-3 h-3" />
+                          排程中
+                        </span>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {formatDate(post.scheduledAt)}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                        <EyeOff className="w-3 h-3" />
+                        草稿
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {post.viewCount.toLocaleString()}
@@ -112,6 +114,16 @@ export default async function AdminPostsPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {!post.published && post.previewToken && (
+                        <Link
+                          href={`/posts/${post.slug}?preview=${post.previewToken}`}
+                          target="_blank"
+                          className="p-2 text-gray-600 hover:text-purple-600 transition-colors"
+                          title="預覽"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Link>
+                      )}
                       <TogglePublishButton
                         postId={post.id}
                         published={post.published}

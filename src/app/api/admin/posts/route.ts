@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { requireAdmin } from '@/lib/auth-utils'
 import prisma from '@/lib/prisma'
 import { slugify } from '@/lib/utils'
 import { createPostSchema, validateRequest } from '@/lib/validations'
+
+function generatePreviewToken(): string {
+  return randomBytes(32).toString('hex')
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
-    const { title, slug, content, contentType, excerpt, coverImage, categoryId, tagIds, published, featured } =
+    const { title, slug, content, contentType, excerpt, coverImage, categoryId, tagIds, published, featured, scheduledAt } =
       validation.data
 
     const finalSlug = slug || slugify(title)
@@ -33,6 +38,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '此 slug 已存在' }, { status: 400 })
     }
 
+    // Generate preview token for unpublished posts
+    const previewToken = !published ? generatePreviewToken() : null
+
+    // Parse scheduledAt if provided
+    const parsedScheduledAt = scheduledAt ? new Date(scheduledAt) : null
+
     const post = await prisma.post.create({
       data: {
         title,
@@ -45,6 +56,8 @@ export async function POST(request: NextRequest) {
         published: published || false,
         featured: featured || false,
         publishedAt: published ? new Date() : null,
+        scheduledAt: parsedScheduledAt,
+        previewToken,
         tags: tagIds?.length
           ? {
               connect: tagIds.map((id: string) => ({ id })),
